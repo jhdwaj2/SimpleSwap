@@ -56,5 +56,4 @@ npx hardhat run scripts/deploy.ts --network localhost
 *   `/frontend`: 前端 DApp 代码 (Coming Soon)
 
 ---
-*Created by [lyc] - 2025-11-19
-```
+Created by [lyc] - 2025-11-19
