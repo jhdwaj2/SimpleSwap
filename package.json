@@ -1,23 +1,15 @@
 {
-  "name": "simpleswap",
-  "version": "1.0.0",
-  "description": "SimpleSwap 是一个基于以太坊的极简去中心化交易协议 (DEX) 原型。\r 它的核心目标是实现一个基于 **恒定乘积公式 (Constant Product Formula, x * y = k)** 的自动化做市商 (AMM)。",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/jhdwaj2/SimpleSwap.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/jhdwaj2/SimpleSwap/issues"
-  },
-  "homepage": "https://github.com/jhdwaj2/SimpleSwap#readme",
-  "devDependencies": {
-    "hardhat": "^3.0.15"
-  }
+    "name": "simpleswap",
+    "version": "1.0.0",
+    "scripts": {
+        "test": "hardhat test",
+        "compile": "hardhat compile"
+    },
+    "devDependencies": {
+        "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+        "hardhat": "^2.22.3"
+    },
+    "dependencies": {
+        "@openzeppelin/contracts": "^5.0.2"
+    }
 }
