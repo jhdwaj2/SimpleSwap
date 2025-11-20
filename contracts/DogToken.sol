@@ -7,7 +7,7 @@ pragma solidity ^0.8.28;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // 3. 定义合约 TokenA，并声明它 "is" (继承自) ERC20
-contract DogeToken is ERC20 {
+contract DogToken is ERC20 {
     // 4. 构造函数：合约部署的那一瞬间执行一次，之后永远不再执行
     constructor() ERC20("Dog Token", "DOGD") {
         // "Dog Token" 是全名
