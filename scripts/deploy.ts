@@ -8,14 +8,14 @@ async function main() {
     console.log("🚀 开始部署合约...");
     console.log("👨‍✈️ 部署者地址 (Owner):", owner.address);
 
-    // 2. 部署 DogeToken
+    // 2. 部署 DogToken
     // getContractFactory 会去 artifacts 文件夹找编译好的字节码
-    // 注意：这里的名字必须和你合约代码里的 `contract DogeToken` 名字一致（区分大小写）
+    // 注意：这里的名字必须和你合约代码里的 `contract DogToken` 名字一致（区分大小写）
     const DogToken = await ethers.getContractFactory("DogToken");
     const dog = await DogToken.deploy();
 
     await dog.waitForDeployment(); // 等待链上确认
-    console.log(`🐕 DogeToken 部署成功，地址: ${await dog.getAddress()}`);
+    console.log(`🐕 DogToken 部署成功，地址: ${await dog.getAddress()}`);
 
     // 3. 部署 CatToken
     const CatToken = await ethers.getContractFactory("CatToken");
@@ -24,15 +24,24 @@ async function main() {
     await cat.waitForDeployment();
     console.log(`🐈 CatToken 部署成功，地址: ${await cat.getAddress()}`);
 
+    // 4. 部署 Swap
+    const SwapToken = await ethers.getContractFactory("SimpleSwap");
+    const swap = await SwapToken.deploy(dog.target, cat.target);
+    console.log(`🦄 SwapToken 部署成功，地址: ${await swap.getAddress()}`)
+
+
     // 4. 查账 (验证环节)
     // 调用合约的 balanceOf 函数
-    const dogeBalance = await dog.balanceOf(owner.address);
+    const DogBalance = await dog.balanceOf(owner.address);
     const catBalance = await cat.balanceOf(owner.address);
+    const [TokenA, TokenB] = await swap.getReserves();
 
     // ethers.formatEther 是把最小单位 Wei (10^18) 转换成我们会读的数字 (比如 1.0)
     console.log("\n💰 钱包余额核对:");
-    console.log(`   - Doge 余额: ${ethers.formatEther(dogeBalance)}`);
-    console.log(`   - Cat  余额: ${ethers.formatEther(catBalance)}`);
+    console.log(`   - Dog 余额: ${ethers.formatEther(DogBalance)}`);
+    console.log(`   - Cat 余额: ${ethers.formatEther(catBalance)}`);
+    console.log(`   - Dog流动性余额: ${ethers.formatEther(TokenA)}`);
+    console.log(`   - Cat流动性余额: ${ethers.formatEther(TokenB)}`);
 }
 
 // 运行主函数，并处理可能出现的错误

@@ -1,65 +1,129 @@
-import Image from "next/image";
+"use client";
+import { useState, useEffect, useCallback } from "react";
+import { ethers } from "ethers";
+// 引入我们刚才定义的配置
+import { DOG_ADDRESS, CAT_ADDRESS, SWAP_ADDRESS, ERC20_ABI, SWAP_ABI } from "../src/constants";
 
 export default function Home() {
+  const [account, setAccount] = useState("");
+  const [isConnected, setIsConnected] = useState(false);
+
+  // 新增状态：代币余额和池子状态
+  const [dogBalance, setDogBalance] = useState("0");
+  const [catBalance, setCatBalance] = useState("0");
+  const [reserveA, setReserveA] = useState("0");
+  const [reserveB, setReserveB] = useState("0");
+
+  const connectWallet = async () => {
+    if (typeof window.ethereum === "undefined") return alert("请安装 MetaMask");
+    try {
+      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+      setAccount(accounts[0]);
+      setIsConnected(true);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // --- 核心：读取链上数据 ---
+  // 使用 useCallback 避免无限循环重渲染
+  const fetchData = useCallback(async () => {
+    if (!isConnected || !window.ethereum) return;
+
+    try {
+      // 1. 建立连接提供者 (Provider) - 它是通往区块链的读写管道
+      const provider = new ethers.BrowserProvider(window.ethereum);
+
+      // 2. 创建合约实例 (只读模式)
+      const dogContract = new ethers.Contract(DOG_ADDRESS, ERC20_ABI, provider);
+      const catContract = new ethers.Contract(CAT_ADDRESS, ERC20_ABI, provider);
+      const swapContract = new ethers.Contract(SWAP_ADDRESS, SWAP_ABI, provider);
+
+      // 3. 并行读取数据 (Promise.all 提速)
+      const [balDog, balCat, reserves] = await Promise.all([
+        dogContract.balanceOf(account),
+        catContract.balanceOf(account),
+        swapContract.getReserves()
+      ]);
+
+      // 4. 格式化数据 (把 Wei 变成人类可读的数字)
+      setDogBalance(ethers.formatEther(balDog));
+      setCatBalance(ethers.formatEther(balCat));
+      setReserveA(ethers.formatEther(reserves[0]));
+      setReserveB(ethers.formatEther(reserves[1]));
+
+    } catch (err) {
+      console.error("读取数据失败:", err);
+    }
+  }, [account, isConnected]);
+
+  // 当连接状态或账户改变时，触发数据读取
+  useEffect(() => {
+    if (isConnected) {
+      fetchData();
+    }
+  }, [isConnected, fetchData]);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="flex min-h-screen flex-col items-center bg-gray-900 text-white p-8">
+      <h1 className="text-4xl font-bold mb-8 text-purple-400">🦄 SimpleSwap</h1>
+
+      <div className="w-full max-w-2xl space-y-6">
+        {/* 钱包连接区 */}
+        <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 flex justify-between items-center">
+          <div>
+            <p className="text-gray-400 text-sm">当前账户</p>
+            <p className="font-mono text-yellow-400">
+              {isConnected ? `${account.slice(0, 6)}...${account.slice(-4)}` : "未连接"}
+            </p>
+          </div>
+          {!isConnected && (
+            <button onClick={connectWallet} className="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg font-bold">
+              连接钱包
+            </button>
+          )}
+          {isConnected && (
+            <button onClick={fetchData} className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded text-sm">
+              🔄 刷新数据
+            </button>
+          )}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+
+        {/* 数据展示区 (只有连接后才显示) */}
+        {isConnected && (
+          <div className="grid grid-cols-2 gap-4">
+            {/* 左边：我的余额 */}
+            <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
+              <h2 className="text-xl font-bold mb-4 text-blue-300">💰 我的钱包</h2>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span>Doge:</span>
+                  <span className="font-mono">{parseFloat(dogBalance).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Cat:</span>
+                  <span className="font-mono">{parseFloat(catBalance).toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 右边：资金池状态 */}
+            <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
+              <h2 className="text-xl font-bold mb-4 text-pink-300">🏦 交易所资金池</h2>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span>Reserve Doge:</span>
+                  <span className="font-mono">{parseFloat(reserveA).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Reserve Cat:</span>
+                  <span className="font-mono">{parseFloat(reserveB).toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </main>
   );
 }
