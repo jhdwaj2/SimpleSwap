@@ -3,10 +3,7 @@
     "version": "1.0.0",
     "scripts": {
         "test": "hardhat test",
-        "compile": "hardhat compile",
-        "pages:build": "npx @cloudflare/next-on-pages",
-        "preview": "pnpmb pages:build && wrangler pages dev",
-        "deploy": "pnpm pages:build && wrangler pages deploy"
+        "compile": "hardhat compile"
     },
     "devDependencies": {
         "@nomicfoundation/hardhat-toolbox": "^5.0.0",
